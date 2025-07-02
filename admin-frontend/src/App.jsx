@@ -2,7 +2,7 @@ import React from 'react'
 import {Routes,Route} from 'react-router-dom'
 import Navbar from './Components/Navbar/Navbar'
 import Sidebar from './Components/Sidebar/Sidebar'
-import Add from './screens/Add/Add'
+import Add from './Screens/Add/Add'
 import List from './Screens/List/List'
 import Orders from './screens/Orders/Orders'
 import { ToastContainer} from 'react-toastify';
