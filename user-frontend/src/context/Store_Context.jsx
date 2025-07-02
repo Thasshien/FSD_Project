@@ -4,7 +4,7 @@ export const Store_Context = createContext();
 const Store_Context_Provider = ({children})=>{
     const [cartItems,setCartItems] = useState({})
     const [food_list,setFoodList] = useState([])
-    const url = 'http://localhost:4000'
+    const url = 'https://food-prep-backend.onrender.com'
     const [token,setToken] = useState("")
 
     const fetchFoodList = async()=>{
