@@ -1,0 +1,40 @@
+.navbar{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 4%;
+}
+.navbar .logo{
+  width: max(10%,200px);
+}
+.navbar .profile{
+  width:40px;
+}
+
+@media (max-width: 750px) {
+  .navbar {
+    padding: 8px 6%;
+  }
+
+  .navbar .logo {
+    width: 140px;
+  }
+
+  .navbar .profile {
+    width: 34px;
+  }
+}
+
+@media (max-width: 420px) {
+  .navbar {
+    padding: 6px 4%;
+  }
+
+  .navbar .logo {
+    width: 120px;
+  }
+
+  .navbar .profile {
+    width: 30px;
+  }
+}

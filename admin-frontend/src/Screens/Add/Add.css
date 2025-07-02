@@ -1,0 +1,149 @@
+.screen{
+    width:70%;
+    margin-left: max(5vw,25px);
+    margin-block: 50px;
+    color:#6d6d6d;
+    font-size: 1.6rem;
+}
+.container{
+    place-self: center;
+    width: max(40%,300px);
+    border: 1px solid var(--theme-color);
+    border-radius: 2%;
+    padding: 5%;
+}
+
+.screen form{
+    gap:20px;
+}
+
+.add-img-upload img{
+    width: 120px;
+    cursor: pointer;
+}
+.add-category{
+    min-width: 125px;
+}
+.add-product-name input,
+.add-product-description textarea,
+.add-price input,
+.add-category select{
+    padding:10px;
+    border: 1px solid var(--theme-color);
+    border-radius: 5px;
+    font-size: 1.4rem;
+    color:#333;
+}
+
+.add-product-description textarea{
+    resize: none;
+}
+
+.add-btn{
+    max-width: 120px;
+    padding: 10px;
+    border: none;
+    background-color: black;
+    color:white;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.add-category-price{
+    display: flex;
+    gap:30px
+}
+
+.add-price input{
+    width: 100%;
+}
+
+@media (max-width: 768px) {
+  .screen {
+    width: 90%;
+    margin: 40px auto;
+    font-size: 1.4rem;
+  }
+
+  .container {
+    width: 100%;
+    padding: 6%;
+  }
+
+  .add-category-price {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .add-btn {
+    width: 100%;
+    max-width: none;
+    font-size: 1rem;
+  }
+
+  .add-img-upload img {
+    width: 100px;
+  }
+
+  .add-product-name input,
+  .add-product-description textarea,
+  .add-price input,
+  .add-category select {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .screen {
+    width: 95%;
+    font-size: 1.3rem;
+    margin-block: 30px;
+  }
+
+  .add-img-upload img {
+    width: 90px;
+  }
+
+  .add-btn {
+    padding: 10px;
+    font-size: 0.95rem;
+  }
+
+  .add-product-name input,
+  .add-product-description textarea,
+  .add-price input,
+  .add-category select {
+    padding: 8px;
+    font-size: 1.1rem;
+  }
+
+  .container {
+    padding: 7%;
+  }
+}
+
+@media (max-width: 420px) {
+  .screen {
+    width: 100%;
+    margin: 25px 10px;
+    font-size: 1.1rem;
+  }
+
+  .container {
+    width: 100%;
+    padding: 6% 5%;
+  }
+
+  .add-img-upload img {
+    width: 80px;
+  }
+
+  .add-btn {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  .add-category select {
+    min-width: auto;
+  }
+}

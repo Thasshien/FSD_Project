@@ -1,0 +1,59 @@
+html{
+
+  font-size: 82.5%;
+}
+
+body{
+
+  min-width: 100vh;
+  font-size: 1.6em;
+}
+
+:root {
+  --theme-color: #21063e;
+}
+
+*,*::before,*::after{
+
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+a{
+
+  text-decoration: none;
+  color: inherit;
+}
+
+/*:root {
+  --theme-bg: #fff;
+  --theme-text: var(--theme-color);
+  --theme-color: var(--theme-color);
+  --theme-border: var(--theme-color);
+}
+
+body.dark {
+  --theme-bg: var(--theme-color);
+  --theme-text: #f1f1f1;
+  --theme-color: white;
+  --theme-border: white;
+}*/
+
+@keyframes fadeIn {
+  from { 
+    opacity: 0;                  
+  }
+  to {    
+    opacity: 1;                  
+  }
+}
+
+.App{
+  /*justify-content: center; works only is .app is flex active so dosent work here*/
+  width: 80vw;  
+  margin: 0 auto;
+  color: var(--theme-color);
+  background-color: var(--theme-bg);
+  border-bottom: var(--theme-bg);
+}

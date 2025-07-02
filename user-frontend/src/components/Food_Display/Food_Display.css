@@ -1,0 +1,69 @@
+.Food_Display{
+  margin-top: 30px;
+}
+
+.Food_Display h2{
+  font-size: max(2vw,24px);
+  font-weight: 600;
+}
+
+.Food_Display_list{
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(240px,1fr));
+  margin-top: 30px;
+  gap:30px;
+  row-gap: 50px;
+}
+
+.Food_Display .Food_Item:hover{
+  scale: 1.05;
+  transition: 0.35s ease-out; 
+}
+
+@media (max-width: 1024px) {
+  .Food_Display_list {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 25px;
+    row-gap: 40px;
+  }
+
+  .Food_Display h2 {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 768px) {
+  .Food_Display_list {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 20px;
+    row-gap: 35px;
+  }
+
+  .Food_Display h2 {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 500px) {
+  .Food_Display_list {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+    row-gap: 30px;
+  }
+
+  .Food_Display h2 {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 420px) {
+  .Food_Display_list {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 14px;
+    row-gap: 25px;
+  }
+
+  .Food_Display h2 {
+    font-size: 17px;
+  }
+}

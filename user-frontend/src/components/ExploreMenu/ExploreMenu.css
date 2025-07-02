@@ -1,0 +1,157 @@
+.ExploreMenu{
+  display: flex;
+  flex-direction: column;
+  gap:20px  
+}
+
+.ExploreMenu_text{
+  text-align: center;
+  margin: auto;
+}
+
+.ExploreMenu h1{
+  font-size: 1.6rem;
+  color:#262626;
+  font-weight: 500;
+  text-align: center;
+}
+
+.ExploreMenu_text{
+  font-size: 1.4rem;
+  max-width: 60%;
+  color:#808080
+}
+
+.ExploreMenu_list{
+  display: flex;
+  justify-content: space-between;
+  gap:30px;
+  align-items: center;
+  text-align: center;
+  margin: 20px 0;
+  overflow-x: scroll;
+}
+
+.ExploreMenu_list::-webkit-scrollbar{
+  display: none;
+}
+
+.ExploreMenu_list_item img{
+  width:7.5vw;
+  min-width: 80px;
+  cursor:pointer;
+  border-radius: 50%;
+  transition: 0.2s;
+}
+
+.ExploreMenu_list_item p{
+  margin-top: 10px;
+  color: #747474;
+  font-size: max(1.4vw,16px);
+  cursor: pointer;
+}
+
+.ExploreMenu hr{
+  margin: 10px 0;
+  background-color: #e2e2e2;
+  height: 2px;
+  border: none;
+}
+
+.ExploreMenu_list_item .active{
+  border: 4px solid var(--theme-color);
+  padding:2px
+}
+
+.ExploreMenu_list_item img:hover{
+  transform: scale(1.12);
+  transition: 0.6s;
+}
+
+@media (max-width: 1050px) {
+  .ExploreMenu_text {
+    max-width: 90%;
+    font-size: 1.2rem;
+  }
+
+  .ExploreMenu_list {
+    gap: 20px;
+  }
+
+  .ExploreMenu_list_item img {
+    width: 9vw;
+  }
+
+  .ExploreMenu_list_item p {
+    font-size: max(1.8vw, 15px);
+  }
+}
+
+@media (max-width: 768px) {
+  .ExploreMenu h1 {
+    font-size: 1.5rem;
+  }
+
+  .ExploreMenu_text {
+    font-size: 1.1rem;
+  }
+
+  .ExploreMenu_list {
+    gap: 16px;
+  }
+
+  .ExploreMenu_list_item img {
+    width: 11vw;
+  }
+
+  .ExploreMenu_list_item p {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 500px) {
+  .ExploreMenu {
+    gap: 16px;
+  }
+
+  .ExploreMenu h1 {
+    font-size: 1.4rem;
+  }
+
+  .ExploreMenu_text {
+    font-size: 1rem;
+    text-align: center;
+  }
+
+  .ExploreMenu_list {
+    gap: 14px;
+  }
+
+  .ExploreMenu_list_item img {
+    width: 14vw;
+  }
+
+  .ExploreMenu_list_item p {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 420px) {
+  .ExploreMenu h1 {
+    font-size: 1.3rem;
+  }
+
+  .ExploreMenu_text {
+    font-size: 0.95rem;
+    max-width: 100%;
+  }
+
+  .ExploreMenu_list_item img {
+    width: 16vw;
+    min-width: 65px;
+  }
+
+  .ExploreMenu_list_item p {
+    font-size: 13px;
+  }
+}
