@@ -4,7 +4,7 @@ import Navbar from './Components/Navbar/Navbar'
 import Sidebar from './Components/Sidebar/Sidebar'
 import Add from './Screens/Add/Add'
 import List from './Screens/List/List'
-import Orders from './screens/Orders/Orders'
+import Orders from './Screens/Orders/Orders'
 import { ToastContainer} from 'react-toastify';
 import './App.css'
 
