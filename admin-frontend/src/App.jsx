@@ -5,10 +5,11 @@ import Sidebar from './Components/Sidebar/Sidebar'
 import Add from './Screens/Add/Add'
 import List from './Screens/List/List'
 import Orders from './Screens/Orders/Orders'
+import Settings from './Screens/Settings/Settings'
 import { ToastContainer} from 'react-toastify';
 import './App.css'
 
-const url = 'https://food-prep-backend.onrender.com'
+const url = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 
 const App = () => {
   
@@ -24,6 +25,7 @@ const App = () => {
           <Route path='/add' element={<Add url={url}/>}/>
           <Route path='/list' element={<List url={url}/>}/>
           <Route path='/orders' element={<Orders url={url}/>}/>
+          <Route path='/settings' element={<Settings url={url}/>}/>
         </Routes>
       </div>
     </div>

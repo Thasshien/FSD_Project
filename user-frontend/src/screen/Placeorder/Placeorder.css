@@ -41,6 +41,47 @@
     margin-top: 30px;
 }
 
+.place-order .cart-total button:disabled{
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.place-order-notes,
+.quote-panel,
+.quote-message{
+    margin-top: 18px;
+    padding: 16px;
+    border-radius: 16px;
+    background: rgba(255,255,255,0.82);
+    border: 1px solid rgba(31, 60, 74, 0.12);
+}
+
+.place-order-notes h3{
+    margin-bottom: 8px;
+}
+
+.place-order-notes p,
+.quote-panel p,
+.quote-message p,
+.quote-status{
+    color:#4b5563;
+    line-height: 1.6;
+}
+
+.quote-message.warning{
+    background:#fff8e8;
+    border-color:#f6c453;
+}
+
+.quote-message.error{
+    background:#fff1f2;
+    border-color:#fda4af;
+}
+
+.quote-status{
+    margin-top: 14px;
+}
+
 @media (max-width:750px){
     .place-order{
         flex-direction: column;

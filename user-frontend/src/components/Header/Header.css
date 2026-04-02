@@ -6,9 +6,17 @@
     margin: 30px auto;
     font-size: 1.7rem;
     font-weight: bold;
-    border-radius: 30px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-radius: 32px;
+    box-shadow: 0 30px 60px rgba(15,23,42,0.16);
     animation: fadeIn 1.85s ease-in; 
+    overflow: hidden;
+}
+
+.Header::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background: linear-gradient(90deg, rgba(255,248,242,0.92) 5%, rgba(255,248,242,0.68) 34%, rgba(255,248,242,0.08) 72%);
 }
 
 .Header_content {
@@ -21,36 +29,40 @@
     bottom:10%;
     left: 6vw;
     color: var(--theme-color);
+    z-index: 1;
 }
 
 .Header_content h2 {
     font-size: max(4.5vw,2.2rem);
-    font-weight: 500;
+    font-weight: 700;
     color: var(--theme-color);
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    text-shadow: none;
+    line-height: 1.02;
 }
 
 .Header_content p {
-    font-size: max(2.1vw,1rem);
+    font-size: max(1.25vw,1rem);
     font-weight: 400;
-    color: var(--theme-color);
-    text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    color: #4b5563;
+    text-shadow: none;
+    line-height: 1.7;
 }
 
 .Header_content button {
-    background-color: white;
-    color: var(--theme-color);
-    padding: 17px 26px;
-    border: 10px;
-    border-radius: 30px;
+    background-color: var(--theme-color);
+    color: white;
+    padding: 15px 24px;
+    border: none;
+    border-radius: 999px;
     cursor: pointer;
-    transition: background-color 0.6s ease-out, transform 0.6s ease-out;
+    transition: background-color 0.3s ease-out, transform 0.3s ease-out, box-shadow 0.3s ease-out;
+    box-shadow: 0 18px 34px rgba(31, 60, 74, 0.22);
 }
 
 .Header_content button:hover {
-    background-color: var(--theme-color);
-    color: white;
+    background-color: var(--theme-accent);
     transform: translateY(-4px);
+    box-shadow: 0 22px 40px rgba(217, 119, 69, 0.28);
 }
 
 @media (max-width: 768px) {

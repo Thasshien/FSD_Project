@@ -1,6 +1,6 @@
 const express = require('express')
 const foodRouter = express.Router()
-const {addFood,listFood,removeFood} = require('../controllers/foodController')
+const {addFood,listFood,removeFood,updateFoodMeta} = require('../controllers/foodController')
 const multer = require('multer')
 
 //image storage engine
@@ -16,5 +16,6 @@ const upload = multer({storage})
 foodRouter.post('/add',upload.single("image"),addFood)
 foodRouter.get('/list',listFood)
 foodRouter.delete('/remove',removeFood)
+foodRouter.post('/update-meta',updateFoodMeta)
 
 module.exports = foodRouter

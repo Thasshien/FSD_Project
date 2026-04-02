@@ -1,39 +1,110 @@
-import React from "react"
-import { useEffect,useContext } from "react";
+import React, { useContext } from "react";
 import { Store_Context } from "../../context/Store_Context";
-import "./Food_Card.css"
-import { assets } from "../../assets/assets"
-import Food_Display from "../Food_Display/Food_Display"
+import "./Food_Card.css";
+import { assets } from "../../assets/assets";
 
-const Food_Card = ({id,name,price,description,image}) => {
-    const {cartItems,setCartItems,addToCart,removeFromCart,url } = useContext(Store_Context);
+const Food_Card = ({
+  id,
+  name,
+  price,
+  description,
+  image,
+  localImage,
+  stock,
+  available,
+  prepTimeMinutes,
+  dietaryInfo,
+  healthTags,
+  isPreviouslyOrdered,
+  onOpen,
+}) => {
+  const { cartItems, addToCart, removeFromCart, getFoodImageSrc, restaurantSettings } = useContext(Store_Context);
+  const imageSrc = getFoodImageSrc({ image, localImage });
+  const canOrder = available !== false && Number(stock ?? 0) > 0;
+  const isLowStock = Number(stock ?? 0) > 0 && Number(stock ?? 0) <= Number(restaurantSettings.lowStockThreshold ?? 3);
 
+  const safeDietaryInfo = dietaryInfo || {};
+  const visibleHighlights = Array.from(
+    new Set([
+    safeDietaryInfo.diabeticFriendly ? "Diabetic friendly" : null,
+    safeDietaryInfo.vegan ? "Vegan" : null,
+    safeDietaryInfo.spicy ? "Spicy" : null,
+    ...((healthTags || []).slice(0, 2)),
+    ].filter(Boolean))
+  );
 
-    return (
-        <div className='Food_Item'> 
-            <div className="Food_Item_image_container">
-                <img className='Food_Item_image' src={`${url}/image/${image}`} alt="" />
-                {
-                !cartItems[id]
-                    ? <img className='add' onClick={()=>addToCart(id)} src={assets.add_icon_white} alt="" />
-                    : <div className="Food_Item_counter">
-                        <img onClick={()=>removeFromCart(id)} src={assets.remove_icon_red} alt="" />
-                        <p className='Food_count'>{cartItems[id]}</p>
-                        <img onClick={()=>addToCart(id)} src={assets.add_icon_green} alt="" />
-                    </div>
-                }
-            </div>
+  const handleCartClick = (event, action) => {
+    event.stopPropagation();
+    action();
+  };
 
-            <div className="Food_Item_info">
-                <p className='Food_Item_name'>{name}</p>
-                <p className='Food_Item_desc'>{description}</p>
-                <div className="Food_Item_price_rating">
-                    <p className='Food_Item_price'>₹{price}</p>
-                    <img src={assets.rating_starts} alt="" />
-                </div>
-            </div>  
+  return (
+    <div
+      className="Food_Item"
+      onClick={onOpen}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onOpen();
+        }
+      }}
+    >
+      <div className="Food_Item_image_container">
+        <img className="Food_Item_image" src={imageSrc} alt={name} />
+        {!canOrder ? (
+          <span className="Food_Item_badge Food_Item_badge_warning">Unavailable</span>
+        ) : null}
+        {isLowStock ? <span className="Food_Item_badge Food_Item_badge_stock">Only {stock} left</span> : null}
+        {isPreviouslyOrdered ? <span className="Food_Item_badge">Ordered before</span> : null}
+        {!cartItems[id] ? (
+          <img
+            className={`add ${!canOrder ? "disabled" : ""}`}
+            onClick={(event) => (canOrder ? handleCartClick(event, () => addToCart(id)) : event.stopPropagation())}
+            src={assets.add_icon_white}
+            alt="Add item"
+          />
+        ) : (
+          <div className="Food_Item_counter" onClick={(event) => event.stopPropagation()}>
+            <img onClick={() => removeFromCart(id)} src={assets.remove_icon_red} alt="Remove item" />
+            <p className="Food_count">{cartItems[id]}</p>
+            <img onClick={() => addToCart(id)} src={assets.add_icon_green} alt="Add item" />
+          </div>
+        )}
+      </div>
+
+      <div className="Food_Item_info">
+        <div className="Food_Item_heading">
+          <div>
+            <p className="Food_Item_name">{name}</p>
+            <p className="Food_Item_desc">{description}</p>
+          </div>
+          <img src={assets.rating_starts} alt="" />
         </div>
-    )
-}
 
-export default Food_Card    
+        <div className="Food_Item_price_row">
+          <p className="Food_Item_price">Rs {price}</p>
+          <p className="Food_Item_quick_meta">{prepTimeMinutes || 25} mins prep</p>
+          <button
+            type="button"
+            className="Food_Item_view_button"
+            onClick={(event) => handleCartClick(event, onOpen)}
+          >
+            View details
+          </button>
+        </div>
+
+        {visibleHighlights.length ? (
+          <div className="Food_Item_tags">
+            {visibleHighlights.map((tag) => (
+              <span key={tag}>{tag}</span>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+};
+
+export default Food_Card;

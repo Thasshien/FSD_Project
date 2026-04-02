@@ -27,7 +27,8 @@
 .add-product-name input,
 .add-product-description textarea,
 .add-price input,
-.add-category select{
+.add-category select,
+.add-nutrition-grid input{
     padding:10px;
     border: 1px solid var(--theme-color);
     border-radius: 5px;
@@ -56,6 +57,38 @@
 
 .add-price input{
     width: 100%;
+}
+
+.add-nutrition-grid{
+    display:grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap:16px;
+}
+
+.add-dietary-section{
+    gap:12px;
+}
+
+.add-dietary-grid{
+    display:grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap:12px;
+}
+
+.add-dietary-grid label{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-size: 1.1rem;
+    color:#333;
+}
+
+.add-toggle{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding-top: 28px;
+    color:#333;
 }
 
 @media (max-width: 768px) {
@@ -88,8 +121,14 @@
   .add-product-name input,
   .add-product-description textarea,
   .add-price input,
-  .add-category select {
+  .add-category select,
+  .add-nutrition-grid input {
     font-size: 1.2rem;
+  }
+
+  .add-nutrition-grid,
+  .add-dietary-grid {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -112,7 +151,8 @@
   .add-product-name input,
   .add-product-description textarea,
   .add-price input,
-  .add-category select {
+  .add-category select,
+  .add-nutrition-grid input {
     padding: 8px;
     font-size: 1.1rem;
   }

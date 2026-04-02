@@ -1,0 +1,67 @@
+.verify-page{
+  min-height: 70vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 40px 20px;
+}
+
+.verify-card{
+  width:min(520px, 100%);
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(31, 60, 74, 0.12);
+  border-radius: 28px;
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.12);
+  padding: 42px 32px;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap: 16px;
+}
+
+.verify-card h2{
+  color:#132a33;
+}
+
+.verify-card p{
+  color:#6b7280;
+  line-height: 1.7;
+  max-width: 380px;
+}
+
+.verify-spinner{
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 5px solid rgba(217, 119, 69, 0.18);
+  border-top-color: #d97745;
+  animation: verify-spin 0.85s linear infinite;
+}
+
+.verify-icon{
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 800;
+  font-size: 26px;
+}
+
+.verify-icon.success{
+  background: #e8fff3;
+  color:#1f9d63;
+}
+
+.verify-icon.failed{
+  background: #fff1f2;
+  color:#dc2626;
+}
+
+@keyframes verify-spin{
+  to{
+    transform: rotate(360deg);
+  }
+}

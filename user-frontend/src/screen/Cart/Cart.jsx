@@ -6,7 +6,7 @@ import {useNavigate} from 'react-router-dom'
 import { toast, ToastContainer } from "react-toastify";
 
 const Cart = () => {
-  const { cartItems, food_list, addToCart, removeFromCart,getTotalCartAmount,url,token } = useContext(Store_Context);
+  const { cartItems, food_list, addToCart, removeFromCart,getTotalCartAmount,token,getFoodImageSrc } = useContext(Store_Context);
   const navigate = useNavigate();
   const handleCheckout = () => {
   if (!token) {
@@ -41,12 +41,12 @@ const Cart = () => {
         </div>
         <br />
         <hr />
-        {food_list.map((food, index) => {
+        {food_list.map((food) => {
         if (cartItems[food._id] > 0) {
           return (
-            <>
+            <div key={food._id}>
               <div className="cart-items-title cart-items-item">
-                <img className="food-image" src={`${url}/image/${food.image}`} alt="" />
+                <img className="food-image" src={getFoodImageSrc(food)} alt="" />
                 <p>{food.name}</p>
                 <p>{food.price}</p>
                 <p>{cartItems[food._id]}</p>
@@ -65,8 +65,11 @@ const Cart = () => {
                   />
                 </div>
               </div>
+              {food.available === false || Number(food.stock ?? 0) <= 0 ? (
+                <p className="cart-item-warning">This item is currently unavailable and must be removed before checkout.</p>
+              ) : null}
               <hr />
-            </>
+            </div>
           );
         }
       })}
