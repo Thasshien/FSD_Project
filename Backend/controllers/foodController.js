@@ -2,6 +2,7 @@ const foodModel = require('../models/foodModel')
 const fsPromises = require('fs').promises
 const path = require('path')
 const { getGstRateForItem } = require('../utils/orderRules')
+const { derivePrepTimeMinutes, getEffectivePrepTimeMinutes } = require('../utils/prepTimeRules')
 
 const toNumber = (value, fallback = 0) => {
     const parsedValue = Number(value)
@@ -42,7 +43,10 @@ const addFood = async(req,res)=>{
             image:image_filename,
             available:toBoolean(req.body.available,true),
             stock:toNumber(req.body.stock,10),
-            prepTimeMinutes:toNumber(req.body.prepTimeMinutes,25),
+            prepTimeMinutes:toNumber(
+                req.body.prepTimeMinutes,
+                derivePrepTimeMinutes({name:req.body.name, category:req.body.category})
+            ),
             gstRate:toNumber(req.body.gstRate,getGstRateForItem({category:req.body.category})),
             nutrition:{
                 calories:toNumber(nutritionInput.calories),
@@ -78,7 +82,31 @@ const addFood = async(req,res)=>{
 const listFood = async(req,res)=>{
     try {
         const foods = await foodModel.find({})
-        res.json({data:foods})
+        const bulkUpdates = []
+        const normalizedFoods = foods.map((food)=>{
+            const normalizedFood = food.toObject()
+            const effectivePrepTimeMinutes = getEffectivePrepTimeMinutes(normalizedFood)
+
+            if(Number(normalizedFood.prepTimeMinutes) !== effectivePrepTimeMinutes){
+                bulkUpdates.push({
+                    updateOne:{
+                        filter:{_id:food._id},
+                        update:{prepTimeMinutes:effectivePrepTimeMinutes},
+                    }
+                })
+            }
+
+            return {
+                ...normalizedFood,
+                prepTimeMinutes:effectivePrepTimeMinutes,
+            }
+        })
+
+        if(bulkUpdates.length){
+            await foodModel.bulkWrite(bulkUpdates)
+        }
+
+        res.json({data:normalizedFoods})
     } catch (error) {
         console.log(error)
         res.status(500).json({"message":"Error listing food"})

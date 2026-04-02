@@ -1,4 +1,5 @@
 const { getOrCreateSettings } = require('../controllers/settingsController')
+const { getEffectivePrepTimeMinutes } = require('./prepTimeRules')
 
 const CATEGORY_GST_RATES = {
     Salad: 5,
@@ -21,6 +22,11 @@ const RESTAURANT_RULES = {
     cancelWindowMinutes: 10,
     maxDeliveryDistanceKm: 50,
     restaurantAddress: "VIT Chennai, Vandalur-Kelambakkam Road, Chennai, Tamil Nadu, 600127, India",
+}
+
+const PROMO_RULES = {
+    code: "SAVE10",
+    discountPercent: 10,
 }
 
 const geocodeCache = new Map()
@@ -234,7 +240,7 @@ const getDeliveryZone = async (address = {}) => {
     }
 }
 
-const buildOrderQuote = async ({ items = [], address = {}, foodLookup = new Map(), now = new Date() }) => {
+const buildOrderQuote = async ({ items = [], address = {}, foodLookup = new Map(), now = new Date(), promoCode = "" }) => {
     const schedule = await getRestaurantSchedule()
     const errors = []
     const warnings = []
@@ -300,7 +306,8 @@ const buildOrderQuote = async ({ items = [], address = {}, foodLookup = new Map(
         totalQuantity += quantity
         subtotal += itemSubtotal
         gstAmount += itemGst
-        maxPrepTimeMinutes = Math.max(maxPrepTimeMinutes, Number(food.prepTimeMinutes ?? 25))
+        const prepTimeMinutes = getEffectivePrepTimeMinutes(food)
+        maxPrepTimeMinutes = Math.max(maxPrepTimeMinutes, prepTimeMinutes)
 
         normalizedItems.push({
             _id: food._id,
@@ -308,6 +315,7 @@ const buildOrderQuote = async ({ items = [], address = {}, foodLookup = new Map(
             image: food.image,
             price: unitPrice,
             category: food.category,
+            prepTimeMinutes,
             gstRate,
             quantity,
             itemSubtotal,
@@ -345,6 +353,19 @@ const buildOrderQuote = async ({ items = [], address = {}, foodLookup = new Map(
         errors.push(`Minimum order amount is Rs ${RESTAURANT_RULES.minimumOrderAmount}.`)
     }
 
+    const normalizedPromoCode = String(promoCode || "").trim().toUpperCase()
+    const promoApplied = normalizedPromoCode === PROMO_RULES.code
+    let discountAmount = 0
+
+    if (normalizedPromoCode && !promoApplied) {
+        errors.push("Invalid promo code. Please use a valid code or remove it.")
+    }
+
+    if (promoApplied && subtotal > 0) {
+        discountAmount = Number(((subtotal * PROMO_RULES.discountPercent) / 100).toFixed(2))
+        warnings.push(`${PROMO_RULES.discountPercent}% promo discount applied with code ${PROMO_RULES.code}.`)
+    }
+
     const peakSurcharge = RESTAURANT_RULES.peakHours.includes(now.getHours()) ? RESTAURANT_RULES.peakHourSurcharge : 0
     const deliveryFee =
         subtotal >= RESTAURANT_RULES.freeDeliveryThreshold
@@ -361,7 +382,16 @@ const buildOrderQuote = async ({ items = [], address = {}, foodLookup = new Map(
         warnings.push("Peak-hour handling surcharge applied due to high demand.")
     }
 
-    const total = Number((subtotal + gstAmount + deliveryFee + peakSurcharge).toFixed(2))
+    const estimatedTravelMinutes = deliveryZone.available
+        ? Math.max(10, Math.ceil(Number(deliveryZone.distanceKm || 0) * 5))
+        : 0
+    const estimatedDeliveryMinutes = Math.max(
+        maxPrepTimeMinutes,
+        maxPrepTimeMinutes + estimatedTravelMinutes
+    )
+    const estimatedReadyAt = new Date(now.getTime() + maxPrepTimeMinutes * 60 * 1000)
+    const estimatedDeliveryAt = new Date(now.getTime() + estimatedDeliveryMinutes * 60 * 1000)
+    const total = Number((subtotal + gstAmount + deliveryFee + peakSurcharge - discountAmount).toFixed(2))
 
     return {
         ok: errors.length === 0,
@@ -373,6 +403,7 @@ const buildOrderQuote = async ({ items = [], address = {}, foodLookup = new Map(
             gstAmount: Number(gstAmount.toFixed(2)),
             deliveryFee,
             peakSurcharge,
+            discountAmount,
             total,
         },
         rules: {
@@ -384,7 +415,20 @@ const buildOrderQuote = async ({ items = [], address = {}, foodLookup = new Map(
             maxTotalItems: RESTAURANT_RULES.maxTotalItems,
             cancelWindowMinutes: RESTAURANT_RULES.cancelWindowMinutes,
             maxDeliveryDistanceKm: RESTAURANT_RULES.maxDeliveryDistanceKm,
-            estimatedDeliveryMinutes: maxPrepTimeMinutes + deliveryZone.distanceKm * 5,
+            estimatedPrepMinutes: maxPrepTimeMinutes,
+            estimatedTravelMinutes,
+            estimatedDeliveryMinutes,
+            estimatedReadyAt,
+            estimatedDeliveryAt,
+            prepBreakdown: normalizedItems.map((item)=>({
+                itemId:item._id,
+                name:item.name,
+                quantity:item.quantity,
+                prepTimeMinutes:item.prepTimeMinutes,
+            })),
+            promoCode: PROMO_RULES.code,
+            promoDiscountPercent: PROMO_RULES.discountPercent,
+            promoApplied,
             opensAtHour: schedule.opensAtHour,
             closesAtHour: schedule.closesAtHour,
             lowStockThreshold: schedule.lowStockThreshold,
@@ -396,6 +440,7 @@ const buildOrderQuote = async ({ items = [], address = {}, foodLookup = new Map(
 module.exports = {
     CATEGORY_GST_RATES,
     RESTAURANT_RULES,
+    PROMO_RULES,
     isRestaurantOpen,
     getGstRateForItem,
     getDeliveryZone,

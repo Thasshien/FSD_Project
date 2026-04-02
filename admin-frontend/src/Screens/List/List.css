@@ -1,6 +1,6 @@
 .list-table-format{
     display:grid;
-    grid-template-columns: 0.6fr 1.8fr 1fr 1fr 0.9fr 1fr 0.5fr;
+    grid-template-columns: 0.6fr 1.7fr 1fr 1fr 0.9fr 0.9fr 1fr 0.5fr;
     align-items: center;
     padding: 12px 15px;
     border: 1px solid #cacaca;

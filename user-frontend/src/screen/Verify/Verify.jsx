@@ -8,6 +8,7 @@ const Verify = () => {
   const [searchParams] = useSearchParams();
   const success = searchParams.get("success");
   const orderId = searchParams.get("orderId");
+  const sessionId = searchParams.get("session_id");
   const navigate = useNavigate();
   const { url } = useContext(Store_Context);
   const [status, setStatus] = useState("verifying");
@@ -20,7 +21,7 @@ const Verify = () => {
       }
 
       try {
-        const response = await axios.post(url + "/api/order/verify", { success, orderId });
+        const response = await axios.post(url + "/api/order/verify", { success, orderId, sessionId });
 
         if (response.data.message === "Not paid") {
           setStatus("failed");
@@ -38,7 +39,7 @@ const Verify = () => {
     };
 
     verifyPayment();
-  }, [navigate, orderId, success, url]);
+  }, [navigate, orderId, sessionId, success, url]);
 
   return (
     <div className="verify-page">

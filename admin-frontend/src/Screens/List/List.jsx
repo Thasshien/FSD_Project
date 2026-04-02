@@ -65,6 +65,9 @@ const List = ({ url }) => {
             <b>Stock</b>
           </p>
           <p>
+            <b>Prep (mins)</b>
+          </p>
+          <p>
             <b>Availability</b>
           </p>
           <p>
@@ -92,6 +95,21 @@ const List = ({ url }) => {
                   )
                 }
                 onBlur={() => updateFoodMeta(item, { stock: item.stock })}
+              />
+              <input
+                type="number"
+                min="5"
+                value={item.prepTimeMinutes ?? 25}
+                onChange={(event) =>
+                  setList((currentList) =>
+                    currentList.map((currentItem) =>
+                      currentItem._id === item._id
+                        ? { ...currentItem, prepTimeMinutes: Number(event.target.value) }
+                        : currentItem
+                    )
+                  )
+                }
+                onBlur={() => updateFoodMeta(item, { prepTimeMinutes: item.prepTimeMinutes })}
               />
               <label className={`list-availability ${item.available !== false ? "available" : "unavailable"}`}>
                 <input

@@ -5,6 +5,16 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
+const formatEtaLabel = (etaValue) => {
+  if (!etaValue) return "Will appear after validation";
+
+  const etaDate = new Date(etaValue);
+  const now = new Date();
+  const isSameDay = etaDate.toDateString() === now.toDateString();
+  const dayLabel = isSameDay ? "Today" : etaDate.toLocaleDateString();
+  return `${dayLabel} by ${etaDate.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+};
+
 const initialAddress = {
   first_name: "",
   last_name: "",
@@ -24,7 +34,7 @@ const PlaceOrder = () => {
   const [quoteWarnings, setQuoteWarnings] = useState([]);
   const [isFetchingQuote, setIsFetchingQuote] = useState(false);
 
-  const { getTotalCartAmount, getCartOrderItems, getCheckoutQuote, restaurantSettings, url, token } =
+  const { getTotalCartAmount, getCartOrderItems, getCheckoutQuote, restaurantSettings, url, token, promoCode } =
     useContext(Store_Context);
   const navigate = useNavigate();
   const totalCartAmount = getTotalCartAmount();
@@ -68,7 +78,7 @@ const PlaceOrder = () => {
 
     const timeoutId = setTimeout(fetchQuote, 350);
     return () => clearTimeout(timeoutId);
-  }, [data, canFetchQuote, getCheckoutQuote, token]);
+  }, [data, canFetchQuote, getCheckoutQuote, token, promoCode]);
 
   const isOrderBlocked = useMemo(() => quoteErrors.length > 0, [quoteErrors]);
 
@@ -84,6 +94,7 @@ const PlaceOrder = () => {
       address: data,
       items: getCartOrderItems(),
       amount: quote.pricing.total,
+      promoCode,
       origin: window.location.origin,
     };
 
@@ -153,6 +164,11 @@ const PlaceOrder = () => {
             </div>
             <hr />
             <div className="cart-total-details">
+              <p>Promo Discount</p>
+              <p>-Rs {quote?.pricing?.discountAmount ?? 0}</p>
+            </div>
+            <hr />
+            <div className="cart-total-details">
               <p>Total</p>
               <p>Rs {quote?.pricing?.total ?? totalCartAmount}</p>
             </div>
@@ -164,10 +180,27 @@ const PlaceOrder = () => {
               {quote?.rules?.deliveryZone?.label || "Enter pincode to validate delivery"}
             </p>
             <p>
-              <strong>Estimated delivery:</strong>{" "}
-              {quote?.rules?.estimatedDeliveryMinutes
-                ? `${quote.rules.estimatedDeliveryMinutes} mins`
+              <strong>Estimated delivery:</strong> {formatEtaLabel(quote?.rules?.estimatedDeliveryAt)}
+            </p>
+            <p>
+              <strong>ETA logic:</strong>{" "}
+              {quote?.rules?.estimatedPrepMinutes
+                ? `${quote.rules.estimatedPrepMinutes} mins prep + ${quote.rules.estimatedTravelMinutes || 0} mins travel`
+                : "We will calculate prep and delivery time after validation"}
+            </p>
+            <p>
+              <strong>Dish prep times:</strong>{" "}
+              {quote?.rules?.prepBreakdown?.length
+                ? quote.rules.prepBreakdown
+                    .map((item) => `${item.name} (${item.prepTimeMinutes} mins)`)
+                    .join(", ")
                 : "Will appear after validation"}
+            </p>
+            <p>
+              <strong>Promo:</strong>{" "}
+              {quote?.rules?.promoApplied
+                ? `${quote.rules.promoCode} applied for ${quote.rules.promoDiscountPercent}% off`
+                : `Use ${quote?.rules?.promoCode || "SAVE10"} for ${quote?.rules?.promoDiscountPercent || 10}% off`}
             </p>
             <p>
               <strong>Free delivery above:</strong> Rs {quote?.rules?.freeDeliveryThreshold || 499}

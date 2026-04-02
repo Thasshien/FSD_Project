@@ -1,5 +1,35 @@
 const uniqueList = (items) => [...new Set(items.filter(Boolean))];
 
+const derivePrepTimeMinutes = (item) => {
+  const name = String(item?.name || "");
+  const category = String(item?.category || "");
+
+  let prepTimeMinutes =
+    {
+      Salad: 12,
+      Rolls: 18,
+      Deserts: 8,
+      Sandwich: 15,
+      Cake: 35,
+      "Pure Veg": 22,
+      Pasta: 24,
+      Noodles: 20,
+    }[category] || 25;
+
+  if (/ice cream/i.test(name)) prepTimeMinutes = 6;
+  if (/salad/i.test(name)) prepTimeMinutes = 12;
+  if (/sandwich/i.test(name)) prepTimeMinutes = Math.max(prepTimeMinutes, 15);
+  if (/roll/i.test(name)) prepTimeMinutes = Math.max(prepTimeMinutes, 18);
+  if (/noodle/i.test(name)) prepTimeMinutes = Math.max(prepTimeMinutes, 20);
+  if (/pasta|lasagna/i.test(name)) prepTimeMinutes = Math.max(prepTimeMinutes, 24);
+  if (/cake/i.test(name)) prepTimeMinutes = Math.max(prepTimeMinutes, 35);
+  if (/grilled/i.test(name)) prepTimeMinutes = Math.max(prepTimeMinutes, 18);
+  if (/chicken/i.test(name)) prepTimeMinutes = Math.max(prepTimeMinutes, 22);
+  if (/vegan|veg/i.test(name) && category !== "Cake") prepTimeMinutes = Math.max(10, prepTimeMinutes - 2);
+
+  return Math.max(5, prepTimeMinutes);
+};
+
 const buildFallbackFoodData = (item) => {
   const name = String(item?.name || "");
   const category = String(item?.category || "");
@@ -153,7 +183,7 @@ export const normalizeFoodItem = (item) => {
         : fallback.healthTags,
     available: item?.available ?? true,
     stock: Number(item?.stock ?? 12),
-    prepTimeMinutes: Number(item?.prepTimeMinutes ?? 25),
+    prepTimeMinutes: Number(item?.prepTimeMinutes ?? derivePrepTimeMinutes(item)),
     gstRate: Number(item?.gstRate ?? 12),
   };
 };

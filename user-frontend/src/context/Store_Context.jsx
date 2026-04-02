@@ -9,6 +9,7 @@ const Store_Context_Provider = ({ children }) => {
   const [cartItems, setCartItems] = useState({});
   const [food_list, setFoodList] = useState([]);
   const [userOrders, setUserOrders] = useState([]);
+  const [promoCode, setPromoCode] = useState(localStorage.getItem("promoCode") || "");
   const [restaurantSettings, setRestaurantSettings] = useState({
     restaurantName: "Food Prep",
     opensAtHour: 10,
@@ -113,6 +114,14 @@ const Store_Context_Provider = ({ children }) => {
     }
   }, [token]);
 
+  useEffect(() => {
+    if (promoCode) {
+      localStorage.setItem("promoCode", promoCode);
+    } else {
+      localStorage.removeItem("promoCode");
+    }
+  }, [promoCode]);
+
   const getFoodImageSrc = (food) => (food?.localImage ? food.image : `${url}/image/${food?.image}`);
 
   const getCartOrderItems = () =>
@@ -142,6 +151,7 @@ const Store_Context_Provider = ({ children }) => {
         {
           address,
           items: getCartOrderItems(),
+          promoCode,
         },
         { headers: { token: activeToken } }
       );
@@ -262,6 +272,8 @@ const Store_Context_Provider = ({ children }) => {
     food_list,
     userOrders,
     fetchUserOrders,
+    promoCode,
+    setPromoCode,
     previouslyOrderedItemIds,
     addOrderItemsToCart,
     getFoodImageSrc,

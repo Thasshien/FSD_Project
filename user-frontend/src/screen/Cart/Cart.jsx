@@ -6,7 +6,8 @@ import {useNavigate} from 'react-router-dom'
 import { toast, ToastContainer } from "react-toastify";
 
 const Cart = () => {
-  const { cartItems, food_list, addToCart, removeFromCart,getTotalCartAmount,token,getFoodImageSrc } = useContext(Store_Context);
+  const { cartItems, food_list, addToCart, removeFromCart, getTotalCartAmount, token, getFoodImageSrc } =
+    useContext(Store_Context);
   const navigate = useNavigate();
   const handleCheckout = () => {
   if (!token) {
@@ -34,9 +35,7 @@ const Cart = () => {
         <div className="cart-items-title">
           <p>Items</p>
           <p>Title</p>
-          <p>Price</p>
           <p>Quantity</p>
-          <p>Total</p>
           <p>Modify</p>
         </div>
         <br />
@@ -48,9 +47,7 @@ const Cart = () => {
               <div className="cart-items-title cart-items-item">
                 <img className="food-image" src={getFoodImageSrc(food)} alt="" />
                 <p>{food.name}</p>
-                <p>{food.price}</p>
                 <p>{cartItems[food._id]}</p>
-                <p>{cartItems[food._id] * food.price}</p>
                 <div className="cart-counter food-item-counter">
                   <img
                     onClick={() => removeFromCart(food._id)}
@@ -76,33 +73,17 @@ const Cart = () => {
       </div>
 
       <div className="cart-bottom">
-        <div className="cart-total">
-          <h2>Cart Totals</h2>
-          <div>
-            <div className="cart-total-details">
-              <p>Subtotal</p>
-              <p>{getTotalCartAmount()}</p>
-            </div>
-            <hr />
-            <div className="cart-total-details">
-              <p>Delivery Fee</p>
-              <p>{20}</p>
-            </div>
-            <hr />
-            <div className="cart-total-details">
-              <p>Total</p>
-              <p>{getTotalCartAmount()+20}</p>
-            </div>
-          </div>
+        <div className="cart-total cart-checkout-panel">
+          <h2>Ready for checkout?</h2>
+          <p className="cart-checkout-note">
+            Final delivery charges, GST, ETA, and the `SAVE10` promo code are applied only after you enter delivery information.
+          </p>
           <button className="cart-checkout-button" onClick={()=>handleCheckout()}>Proceed to Checkout</button>
           <ToastContainer theme="dark"/>
         </div>
-        <div className="cart-promocode">
-          <p>If you have a promo code, Enter it here</p>
-          <div className="cart-promocode-input">
-            <input type="text" placeholder="Enter promo code" />
-            <button>Apply</button>
-          </div>
+        <div className="cart-promocode cart-summary-note">
+          <p>Items in cart: {Object.values(cartItems).reduce((total, count) => total + (count || 0), 0)}</p>
+          <p>Price details are shown on the delivery information page only.</p>
         </div>
       </div>
       

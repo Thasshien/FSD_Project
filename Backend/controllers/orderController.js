@@ -4,6 +4,7 @@ const foodModel = require('../models/foodModel')
 const mongoose = require('mongoose')
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
 const { buildOrderQuote, RESTAURANT_RULES } = require('../utils/orderRules')
+const { getEffectivePrepTimeMinutes } = require('../utils/prepTimeRules')
 
 const getFoodLookupFromItems = async (items = []) => {
     const lookup = new Map()
@@ -28,7 +29,7 @@ const getFoodLookupFromItems = async (items = []) => {
                 category:item.category,
                 available:item.available !== false,
                 stock:Number(item.stock ?? 20),
-                prepTimeMinutes:Number(item.prepTimeMinutes ?? 25),
+                prepTimeMinutes:getEffectivePrepTimeMinutes(item),
                 gstRate:Number(item.gstRate ?? 12),
             })
         }
@@ -39,6 +40,88 @@ const getFoodLookupFromItems = async (items = []) => {
 
 const isPersistedFoodId = (itemId) => mongoose.Types.ObjectId.isValid(String(itemId || ""))
 
+const buildRefundState = (overrides = {}) => ({
+    status:'not_requested',
+    provider:'stripe',
+    refundId:'',
+    amount:0,
+    currency:'inr',
+    initiatedAt:null,
+    completedAt:null,
+    note:'',
+    ...overrides,
+})
+
+const processRefundForOrder = async (order, cancellationReason = "requested_by_customer") => {
+    if(!order?.payment){
+        return buildRefundState({
+            status:'not_required',
+            note:'No captured payment was found for this order, so no refund was needed.',
+        })
+    }
+
+    if(order?.refund?.status === 'succeeded' || order?.refund?.status === 'pending'){
+        return {
+            ...buildRefundState(order.refund?.toObject ? order.refund.toObject() : order.refund),
+            note:order.refund?.note || 'Refund is already being processed for this order.',
+        }
+    }
+
+    let paymentIntentId = order?.paymentMeta?.paymentIntentId || ""
+    const checkoutSessionId = order?.paymentMeta?.checkoutSessionId || ""
+
+    try {
+        if(!paymentIntentId && checkoutSessionId){
+            const checkoutSession = await stripe.checkout.sessions.retrieve(checkoutSessionId)
+            paymentIntentId = String(checkoutSession?.payment_intent || "")
+        }
+
+        if(!paymentIntentId){
+            return buildRefundState({
+                status:'manual_review',
+                initiatedAt:new Date(),
+                amount:Number(order.amount || 0),
+                currency:String(order?.paymentMeta?.currency || 'inr').toLowerCase(),
+                note:'Payment was received, but the Stripe payment reference is missing. Please process the refund manually from the Stripe dashboard.',
+            })
+        }
+
+        const refund = await stripe.refunds.create({
+            payment_intent:paymentIntentId,
+            reason:['requested_by_customer', 'duplicate', 'fraudulent'].includes(cancellationReason)
+                ? cancellationReason
+                : 'requested_by_customer',
+            metadata:{
+                orderId:String(order._id),
+            }
+        })
+
+        const refundStatus = refund.status === 'succeeded' ? 'succeeded' : 'pending'
+        const completedAt = refund.status === 'succeeded' ? new Date() : null
+
+        return buildRefundState({
+            status:refundStatus,
+            refundId:refund.id,
+            amount:Number((refund.amount || 0) / 100),
+            currency:String(refund.currency || order?.paymentMeta?.currency || 'inr').toLowerCase(),
+            initiatedAt:new Date(refund.created * 1000),
+            completedAt,
+            note:refundStatus === 'succeeded'
+                ? 'Refund has been initiated to the customer\'s original payment method via Stripe.'
+                : 'Refund request has been sent to Stripe and is currently being processed.',
+        })
+    } catch (error) {
+        console.log(error)
+        return buildRefundState({
+            status:'manual_review',
+            initiatedAt:new Date(),
+            amount:Number(order.amount || 0),
+            currency:String(order?.paymentMeta?.currency || 'inr').toLowerCase(),
+            note:'We could not confirm the Stripe refund automatically. Please review this order manually in the Stripe dashboard.',
+        })
+    }
+}
+
 const getCheckoutQuote = async (req,res)=>{
     try {
         const foodLookup = await getFoodLookupFromItems(req.body.items || [])
@@ -46,6 +129,7 @@ const getCheckoutQuote = async (req,res)=>{
             items:req.body.items || [],
             address:req.body.address || {},
             foodLookup,
+            promoCode:req.body.promoCode || "",
         })
 
         res.status(200).json(quote)
@@ -68,6 +152,7 @@ const placeOrder = async(req,res)=>{
             items:req.body.items || [],
             address:req.body.address || {},
             foodLookup,
+            promoCode:req.body.promoCode || "",
         })
 
         if(!quote.ok){
@@ -88,13 +173,17 @@ const placeOrder = async(req,res)=>{
                 deliveryMeta:{
                     distanceKm:quote.rules.deliveryZone.distanceKm,
                     label:quote.rules.deliveryZone.label,
+                    estimatedPrepMinutes:quote.rules.estimatedPrepMinutes,
                     estimatedDeliveryMinutes:quote.rules.estimatedDeliveryMinutes,
+                    estimatedReadyAt:quote.rules.estimatedReadyAt,
+                    estimatedDeliveryAt:quote.rules.estimatedDeliveryAt,
                     pincodeServiceable:quote.rules.deliveryZone.available,
                 },
                 address:req.body.address,
                 cancellation:{
                     allowedUntil:new Date(Date.now() + RESTAURANT_RULES.cancelWindowMinutes * 60 * 1000),
-                }
+                },
+                refund:buildRefundState(),
             }
         )
 
@@ -146,8 +235,24 @@ const placeOrder = async(req,res)=>{
         const session = await stripe.checkout.sessions.create({
             line_items,
             mode:'payment',
-            success_url:`${frontend_url}/verify?success=true&orderId=${newOrder._id}`,
-            cancel_url:`${frontend_url}/verify?success=false&orderId=${newOrder._id}`
+            metadata:{
+                orderId:String(newOrder._id),
+                userId:String(req.userId),
+            },
+            success_url:`${frontend_url}/verify?success=true&orderId=${newOrder._id}&session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url:`${frontend_url}/verify?success=false&orderId=${newOrder._id}&session_id={CHECKOUT_SESSION_ID}`
+        })
+
+        await orderModel.findByIdAndUpdate(newOrder._id,{
+            paymentMeta:{
+                provider:'stripe',
+                checkoutSessionId:session.id,
+                paymentIntentId:String(session.payment_intent || ''),
+                paymentStatus:String(session.payment_status || 'pending'),
+                amountReceived:0,
+                currency:String(session.currency || 'inr').toLowerCase(),
+                paidAt:null,
+            }
         })
 
         res.json({session_url:session.url, quote})
@@ -160,14 +265,37 @@ const placeOrder = async(req,res)=>{
 }
 
 const verifyOrder = async(req,res)=>{
-    const {orderId,success}=req.body;
+    const {orderId,success,sessionId}=req.body;
     try {
         const order = await orderModel.findById(orderId)
         if(!order)
             return res.status(404).json({"message":"Order not found"})
 
         if(success==='true'){
-            await orderModel.findByIdAndUpdate(orderId,{payment:true})
+            let paymentMeta = {
+                ...(order.paymentMeta?.toObject ? order.paymentMeta.toObject() : (order.paymentMeta || {})),
+                provider:'stripe',
+                paymentStatus:'paid',
+                paidAt:new Date(),
+            }
+
+            if(sessionId){
+                const session = await stripe.checkout.sessions.retrieve(sessionId)
+                paymentMeta = {
+                    ...paymentMeta,
+                    checkoutSessionId:session.id,
+                    paymentIntentId:String(session.payment_intent || paymentMeta.paymentIntentId || ''),
+                    paymentStatus:String(session.payment_status || 'paid'),
+                    amountReceived:Number((session.amount_total || 0) / 100),
+                    currency:String(session.currency || paymentMeta.currency || 'inr').toLowerCase(),
+                    paidAt:session.status === 'complete' ? new Date() : paymentMeta.paidAt,
+                }
+            }
+
+            await orderModel.findByIdAndUpdate(orderId,{
+                payment:true,
+                paymentMeta,
+            })
             res.json({"message":"Payment successful"})
         }
         else{
@@ -212,7 +340,8 @@ const updateStatus = async(req,res)=>{
             return res.status(404).json({"message":"Order not found"})
 
         const nextStatus = req.body.status
-        const cancellation = {...(order.cancellation || {})}
+        const cancellation = {...(order.cancellation?.toObject ? order.cancellation.toObject() : (order.cancellation || {}))}
+        let refund = buildRefundState(order.refund?.toObject ? order.refund.toObject() : order.refund)
         if(nextStatus === "Out For Delivery" || nextStatus === "Delivered"){
             cancellation.allowedUntil = new Date()
         }
@@ -226,10 +355,17 @@ const updateStatus = async(req,res)=>{
             cancellation.cancelledAt = new Date()
             cancellation.isCancelled = true
             cancellation.reason = cancellation.reason || "Cancelled by admin"
+            refund = await processRefundForOrder(order, "requested_by_customer")
         }
 
-        await orderModel.findByIdAndUpdate(req.body.orderId,{status:nextStatus, cancellation})
-        res.json({"message":"status updated"})
+        await orderModel.findByIdAndUpdate(req.body.orderId,{status:nextStatus, cancellation, refund})
+        res.json({
+            "message":nextStatus === "Cancelled"
+                ? (refund.status === 'succeeded' || refund.status === 'pending'
+                    ? 'Order cancelled and refund process started.'
+                    : 'Order cancelled. Refund has been flagged for manual review.')
+                : "status updated"
+        })
     } catch (error) {
         console.log(error)
         res.json({"message":error.message})
@@ -261,6 +397,8 @@ const cancelOrder = async(req,res)=>{
             }
         }
 
+        const refund = await processRefundForOrder(order, "requested_by_customer")
+
         await orderModel.findByIdAndUpdate(req.body.orderId,{
             status:"Cancelled",
             cancellation:{
@@ -268,10 +406,20 @@ const cancelOrder = async(req,res)=>{
                 cancelledAt:new Date(),
                 isCancelled:true,
                 reason:req.body.reason || "Cancelled by user",
-            }
+            },
+            refund,
         })
 
-        res.status(200).json({"message":"Order cancelled successfully"})
+        const refundMessage =
+            refund.status === 'not_required'
+                ? 'No payment had been captured, so no refund was needed.'
+                : refund.status === 'succeeded'
+                    ? 'Your refund has been initiated to the original payment method.'
+                    : refund.status === 'pending'
+                        ? 'Your refund request is being processed via Stripe.'
+                        : 'Your order is cancelled and the refund has been marked for manual review.'
+
+        res.status(200).json({"message":`Order cancelled successfully. ${refundMessage}`})
     } catch (error) {
         console.log(error)
         res.status(500).json({"message":"Unable to cancel order"})

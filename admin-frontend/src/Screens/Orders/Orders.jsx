@@ -3,6 +3,34 @@ import "./Orders.css";
 import { assets } from "../../assets/assets";
 import axios from "axios";
 
+const formatEtaLabel = (etaValue) => {
+  if (!etaValue) return "Will update soon";
+
+  const etaDate = new Date(etaValue);
+  const now = new Date();
+  const isSameDay = etaDate.toDateString() === now.toDateString();
+  const dayLabel = isSameDay ? "Today" : etaDate.toLocaleDateString();
+
+  return `${dayLabel} by ${etaDate.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+};
+
+const getRefundLabel = (order) => {
+  if (!order.payment) return "Unpaid";
+
+  switch (order.refund?.status) {
+    case "succeeded":
+      return "Refund initiated";
+    case "pending":
+      return "Refund processing";
+    case "manual_review":
+      return "Manual refund review";
+    case "not_required":
+      return "No refund needed";
+    default:
+      return "Paid";
+  }
+};
+
 const statusClassMap = {
   "Food Processing": "processing",
   "Out For Delivery": "delivery",
@@ -90,7 +118,11 @@ const Orders = ({ url }) => {
                 <p>Total: Rs {order.amount}</p>
                 <p>GST: Rs {order.pricing?.gstAmount ?? 0}</p>
                 <p>Delivery: Rs {order.pricing?.deliveryFee ?? 0}</p>
-                <p>ETA: {order.deliveryMeta?.estimatedDeliveryMinutes ?? 30} mins</p>
+                <p>Prep ETA: {order.deliveryMeta?.estimatedPrepMinutes ?? 25} mins</p>
+                <p>Delivery ETA: {order.deliveryMeta?.estimatedDeliveryMinutes ?? 30} mins</p>
+                <p>Deliver by: {formatEtaLabel(order.deliveryMeta?.estimatedDeliveryAt)}</p>
+                <p>Refund: {getRefundLabel(order)}</p>
+                {order.refund?.note ? <p>{order.refund.note}</p> : null}
                 <p>{new Date(order.date).toLocaleString()}</p>
               </div>
               <span className={`order-status-badge ${statusClass}`}>{order.status}</span>

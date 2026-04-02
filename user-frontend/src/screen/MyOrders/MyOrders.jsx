@@ -7,6 +7,40 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 
+const formatEtaLabel = (etaValue) => {
+  if (!etaValue) return "Will update soon";
+
+  const etaDate = new Date(etaValue);
+  const now = new Date();
+  const isSameDay = etaDate.toDateString() === now.toDateString();
+  const dayLabel = isSameDay ? "Today" : etaDate.toLocaleDateString();
+
+  return `${dayLabel} by ${etaDate.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`;
+};
+
+const getRefundLabel = (order) => {
+  if (!order.payment) {
+    return "No payment captured yet";
+  }
+
+  if (order.status !== "Cancelled" && order.refund?.status === "not_requested") {
+    return "Paid via Stripe";
+  }
+
+  switch (order.refund?.status) {
+    case "succeeded":
+      return "Refund initiated to original payment method";
+    case "pending":
+      return "Refund is processing in Stripe";
+    case "manual_review":
+      return "Refund under manual review";
+    case "not_required":
+      return "No refund required";
+    default:
+      return order.status === "Cancelled" ? "Refund status will update shortly" : "Paid via Stripe";
+  }
+};
+
 const statusClassMap = {
   "Food Processing": "processing",
   "Out For Delivery": "delivery",
@@ -16,6 +50,7 @@ const statusClassMap = {
 
 const MyOrders = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("current");
   const { token, url, userOrders, fetchUserOrders, addOrderItemsToCart } = useContext(Store_Context);
   const navigate = useNavigate();
 
@@ -62,6 +97,7 @@ const MyOrders = () => {
       userOrders.map((order) => ({
         ...order,
         statusClass: statusClassMap[order.status] || "processing",
+        isPreviousOrder: order.status === "Delivered" || order.status === "Cancelled",
         canCancel:
           !order.cancellation?.isCancelled &&
           order.status !== "Out For Delivery" &&
@@ -71,6 +107,14 @@ const MyOrders = () => {
           new Date(order.cancellation.allowedUntil).getTime() > Date.now(),
       })),
     [userOrders]
+  );
+
+  const filteredOrders = useMemo(
+    () =>
+      ordersWithMeta.filter((order) =>
+        activeTab === "previous" ? order.isPreviousOrder : !order.isPreviousOrder
+      ),
+    [activeTab, ordersWithMeta]
   );
 
   if (isLoading) return <Loader />;
@@ -87,9 +131,26 @@ const MyOrders = () => {
         </button>
       </div>
 
+      <div className="my-orders-tabs">
+        <button
+          type="button"
+          className={activeTab === "current" ? "active" : ""}
+          onClick={() => setActiveTab("current")}
+        >
+          Current Orders
+        </button>
+        <button
+          type="button"
+          className={activeTab === "previous" ? "active" : ""}
+          onClick={() => setActiveTab("previous")}
+        >
+          Previous Orders
+        </button>
+      </div>
+
       <div className="container">
-        {ordersWithMeta.length > 0 ? (
-          ordersWithMeta.map((order) => {
+        {filteredOrders.length > 0 ? (
+          filteredOrders.map((order) => {
             return (
               <div key={order._id} className="my-orders-order">
                 <div className="my-orders-top">
@@ -121,6 +182,12 @@ const MyOrders = () => {
                         <strong>ETA:</strong> {order.deliveryMeta?.estimatedDeliveryMinutes || 30} mins
                       </p>
                       <p>
+                        <strong>ETA by:</strong> {formatEtaLabel(order.deliveryMeta?.estimatedDeliveryAt)}
+                      </p>
+                      <p>
+                        <strong>Prep:</strong> {order.deliveryMeta?.estimatedPrepMinutes || 25} mins
+                      </p>
+                      <p>
                         <strong>Ordered:</strong> {new Date(order.date).toLocaleString()}
                       </p>
                       <p>
@@ -132,6 +199,14 @@ const MyOrders = () => {
                           ? new Date(order.cancellation.allowedUntil).toLocaleTimeString()
                           : "Not available"}
                       </p>
+                      <p>
+                        <strong>Refund:</strong> {getRefundLabel(order)}
+                      </p>
+                      {order.refund?.note ? (
+                        <p>
+                          <strong>Refund note:</strong> {order.refund.note}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -171,7 +246,9 @@ const MyOrders = () => {
             );
           })
         ) : (
-          <div className="my-orders-empty">No orders found yet.</div>
+          <div className="my-orders-empty">
+            {activeTab === "previous" ? "No previous orders found yet." : "No current orders found right now."}
+          </div>
         )}
       </div>
     </div>
