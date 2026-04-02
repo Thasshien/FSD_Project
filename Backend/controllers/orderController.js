@@ -410,16 +410,7 @@ const cancelOrder = async(req,res)=>{
             refund,
         })
 
-        const refundMessage =
-            refund.status === 'not_required'
-                ? 'No payment had been captured, so no refund was needed.'
-                : refund.status === 'succeeded'
-                    ? 'Your refund has been initiated to the original payment method.'
-                    : refund.status === 'pending'
-                        ? 'Your refund request is being processed via Stripe.'
-                        : 'Your order is cancelled and the refund has been marked for manual review.'
-
-        res.status(200).json({"message":`Order cancelled successfully. ${refundMessage}`})
+        res.status(200).json({"message":"Order cancelled successfully. Refund will be processed soon by Stripe."})
     } catch (error) {
         console.log(error)
         res.status(500).json({"message":"Unable to cancel order"})

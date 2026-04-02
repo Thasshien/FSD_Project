@@ -19,26 +19,11 @@ const formatEtaLabel = (etaValue) => {
 };
 
 const getRefundLabel = (order) => {
-  if (!order.payment) {
-    return "No payment captured yet";
+  if (order.status === "Cancelled") {
+    return "Refund will be processed soon by Stripe";
   }
 
-  if (order.status !== "Cancelled" && order.refund?.status === "not_requested") {
-    return "Paid via Stripe";
-  }
-
-  switch (order.refund?.status) {
-    case "succeeded":
-      return "Refund initiated to original payment method";
-    case "pending":
-      return "Refund is processing in Stripe";
-    case "manual_review":
-      return "Refund under manual review";
-    case "not_required":
-      return "No refund required";
-    default:
-      return order.status === "Cancelled" ? "Refund status will update shortly" : "Paid via Stripe";
-  }
+  return order.payment ? "Paid via Stripe" : "Payment pending";
 };
 
 const statusClassMap = {
@@ -202,7 +187,7 @@ const MyOrders = () => {
                       <p>
                         <strong>Refund:</strong> {getRefundLabel(order)}
                       </p>
-                      {order.refund?.note ? (
+                      {order.refund?.note && order.status !== "Cancelled" ? (
                         <p>
                           <strong>Refund note:</strong> {order.refund.note}
                         </p>

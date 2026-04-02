@@ -15,20 +15,8 @@ const formatEtaLabel = (etaValue) => {
 };
 
 const getRefundLabel = (order) => {
-  if (!order.payment) return "Unpaid";
-
-  switch (order.refund?.status) {
-    case "succeeded":
-      return "Refund initiated";
-    case "pending":
-      return "Refund processing";
-    case "manual_review":
-      return "Manual refund review";
-    case "not_required":
-      return "No refund needed";
-    default:
-      return "Paid";
-  }
+  if (order.status === "Cancelled") return "Refund will be processed soon by Stripe";
+  return order.payment ? "Paid via Stripe" : "Unpaid";
 };
 
 const statusClassMap = {
@@ -122,7 +110,7 @@ const Orders = ({ url }) => {
                 <p>Delivery ETA: {order.deliveryMeta?.estimatedDeliveryMinutes ?? 30} mins</p>
                 <p>Deliver by: {formatEtaLabel(order.deliveryMeta?.estimatedDeliveryAt)}</p>
                 <p>Refund: {getRefundLabel(order)}</p>
-                {order.refund?.note ? <p>{order.refund.note}</p> : null}
+                {order.refund?.note && order.status !== "Cancelled" ? <p>{order.refund.note}</p> : null}
                 <p>{new Date(order.date).toLocaleString()}</p>
               </div>
               <span className={`order-status-badge ${statusClass}`}>{order.status}</span>
