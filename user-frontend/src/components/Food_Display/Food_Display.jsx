@@ -12,7 +12,6 @@ const pricePresets = [
 
 const nutritionFilters = [
   { label: "Low sodium", key: "lowSodium" },
-  { label: "Low sugar", key: "lowSugar" },
   { label: "Peanut free", key: "peanutFree" },
   { label: "Diabetic friendly", key: "diabeticFriendly" },
   { label: "Previously ordered", key: "previouslyOrdered" },
@@ -50,7 +49,6 @@ const Food_Display = ({ category }) => {
   const [calorieLimit, setCalorieLimit] = useState(600);
   const [advancedFilters, setAdvancedFilters] = useState({
     lowSodium: false,
-    lowSugar: false,
     peanutFree: false,
     diabeticFriendly: false,
     previouslyOrdered: false,
@@ -84,10 +82,6 @@ const Food_Display = ({ category }) => {
       }
 
       if (advancedFilters.lowSodium && Number(nutrition.sodium || 0) > 400) {
-        return false;
-      }
-
-      if (advancedFilters.lowSugar && Number(nutrition.sugar || 0) > 10) {
         return false;
       }
 
@@ -271,7 +265,7 @@ const Food_Display = ({ category }) => {
                   <span>
                     {selectedItem.available === false || Number(selectedItem.stock ?? 0) <= 0
                       ? "Currently unavailable"
-                      : `Stock left: ${selectedItem.stock ?? 0}`}
+                      : "Available to order"}
                   </span>
                   <span>
                     {selectedItem.dietaryInfo?.containsPeanuts ? "Contains peanuts" : "Peanut free"}

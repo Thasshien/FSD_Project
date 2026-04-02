@@ -33,8 +33,9 @@ const PlaceOrder = () => {
   const [quoteErrors, setQuoteErrors] = useState([]);
   const [quoteWarnings, setQuoteWarnings] = useState([]);
   const [isFetchingQuote, setIsFetchingQuote] = useState(false);
+  const [promoInput, setPromoInput] = useState("");
 
-  const { getTotalCartAmount, getCartOrderItems, getCheckoutQuote, restaurantSettings, url, token, promoCode } =
+  const { getTotalCartAmount, getCartOrderItems, getCheckoutQuote, restaurantSettings, url, token, promoCode, setPromoCode } =
     useContext(Store_Context);
   const navigate = useNavigate();
   const totalCartAmount = getTotalCartAmount();
@@ -46,11 +47,33 @@ const PlaceOrder = () => {
     setData((currentData) => ({ ...currentData, [name]: value }));
   };
 
+  const handleApplyPromo = () => {
+    const normalizedCode = promoInput.trim().toUpperCase();
+
+    if (!normalizedCode) {
+      setPromoCode("");
+      toast.info("Promo code removed.");
+      return;
+    }
+
+    if (normalizedCode !== "SAVE10") {
+      toast.error("Invalid promo code. Use SAVE10.");
+      return;
+    }
+
+    setPromoCode(normalizedCode);
+    toast.success("SAVE10 applied. 10% discount will be included in checkout.");
+  };
+
   useEffect(() => {
     if (!token || totalCartAmount === 0) {
       navigate("/cart");
     }
   }, [token, navigate, totalCartAmount]);
+
+  useEffect(() => {
+    setPromoInput(promoCode);
+  }, [promoCode]);
 
   useEffect(() => {
     const fetchQuote = async () => {
@@ -130,12 +153,29 @@ const PlaceOrder = () => {
 
         <div className="place-order-notes">
           <h3>Operational rules</h3>
-          <p>Orders outside our supported pincodes, below the minimum order amount, or beyond stock limits are blocked automatically.</p>
+          <p>Orders outside our supported pincodes or below the minimum order amount are blocked automatically.</p>
           <p>
             {restaurantSettings.restaurantName || "Restaurant"} accepts orders between{" "}
             {restaurantSettings.opensAtHour}:00 and {restaurantSettings.closesAtHour}:00.
           </p>
           <p>Orders can be cancelled only within 10 minutes and before they go out for delivery.</p>
+        </div>
+
+        <div className="place-order-notes">
+          <h3>Promo code</h3>
+          <p>Apply `SAVE10` here to get 10% off on subtotal.</p>
+          <div className="place-order-promo">
+            <input
+              type="text"
+              value={promoInput}
+              onChange={(event) => setPromoInput(event.target.value)}
+              placeholder="Enter SAVE10"
+            />
+            <button type="button" onClick={handleApplyPromo}>
+              Apply
+            </button>
+          </div>
+          {promoCode ? <p>Applied code: {promoCode}</p> : null}
         </div>
       </div>
 
@@ -204,9 +244,6 @@ const PlaceOrder = () => {
             </p>
             <p>
               <strong>Free delivery above:</strong> Rs {quote?.rules?.freeDeliveryThreshold || 499}
-            </p>
-            <p>
-              <strong>Low stock warning at:</strong> {quote?.rules?.lowStockThreshold || restaurantSettings.lowStockThreshold} items
             </p>
           </div>
 

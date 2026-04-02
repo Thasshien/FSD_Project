@@ -15,6 +15,17 @@ const categoryGstDefaults = {
   Noodles: 12,
 };
 
+const categoryPrepDefaults = {
+  Salad: 12,
+  Rolls: 18,
+  Deserts: 8,
+  Sandwich: 15,
+  Cake: 35,
+  "Pure Veg": 22,
+  Pasta: 24,
+  Noodles: 20,
+};
+
 const Add = ({ url }) => {
   const [image, setImage] = useState(false);
   const dietaryDefaults = {
@@ -39,9 +50,8 @@ const Add = ({ url }) => {
     fat: "",
     allergens: "",
     healthTags: "",
-    stock: "10",
-    prepTimeMinutes: "25",
-    gstRate: "12",
+    prepTimeMinutes: String(categoryPrepDefaults.Salad),
+    gstRate: String(categoryGstDefaults.Salad),
     available: true,
     ...dietaryDefaults,
   });
@@ -50,7 +60,12 @@ const Add = ({ url }) => {
     const { name, value, type, checked } = e.target;
     setData((currentData) => ({
       ...currentData,
-      ...(name === "category" ? { gstRate: String(categoryGstDefaults[value] || currentData.gstRate) } : {}),
+      ...(name === "category"
+        ? {
+            gstRate: String(categoryGstDefaults[value] || currentData.gstRate),
+            prepTimeMinutes: String(categoryPrepDefaults[value] || currentData.prepTimeMinutes),
+          }
+        : {}),
       [name]: type === "checkbox" ? checked : value,
     }));
   };
@@ -63,7 +78,6 @@ const Add = ({ url }) => {
     formData.append("price", Number(data.price));
     formData.append("category", data.category);
     formData.append("image", image);
-    formData.append("stock", Number(data.stock));
     formData.append("prepTimeMinutes", Number(data.prepTimeMinutes));
     formData.append("gstRate", Number(data.gstRate));
     formData.append("available", data.available);
@@ -123,9 +137,8 @@ const Add = ({ url }) => {
         fat: "",
         allergens: "",
         healthTags: "",
-        stock: "10",
-        prepTimeMinutes: "25",
-        gstRate: "12",
+        prepTimeMinutes: String(categoryPrepDefaults.Salad),
+        gstRate: String(categoryGstDefaults.Salad),
         available: true,
         ...dietaryDefaults,
       });
@@ -209,24 +222,13 @@ const Add = ({ url }) => {
           </div>
           <div className="add-nutrition-grid">
             <div className="flex-col">
-              <p>Stock</p>
-              <input
-                value={data.stock}
-                onChange={onChangeHandler}
-                type="number"
-                name="stock"
-                placeholder="10"
-                required
-              />
-            </div>
-            <div className="flex-col">
               <p>Prep time (mins)</p>
               <input
                 value={data.prepTimeMinutes}
                 onChange={onChangeHandler}
                 type="number"
                 name="prepTimeMinutes"
-                placeholder="25"
+                placeholder={String(categoryPrepDefaults[data.category] || 25)}
                 required
               />
             </div>
@@ -234,12 +236,13 @@ const Add = ({ url }) => {
               <p>GST rate (%)</p>
               <input
                 value={data.gstRate}
-                onChange={onChangeHandler}
                 type="number"
                 name="gstRate"
-                placeholder="12"
+                placeholder={String(categoryGstDefaults[data.category] || 12)}
+                readOnly
                 required
               />
+              <small>Auto-set from product category</small>
             </div>
             <label className="add-toggle">
               <input

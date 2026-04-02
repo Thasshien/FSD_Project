@@ -56,6 +56,26 @@
     border: 1px solid rgba(31, 60, 74, 0.12);
 }
 
+.place-order-promo{
+    display:flex;
+    gap:10px;
+    margin-top: 12px;
+}
+
+.place-order-promo input{
+    margin-bottom: 0;
+}
+
+.place-order-promo button{
+    border:none;
+    background:#264653;
+    color:white;
+    padding: 0 18px;
+    border-radius: 10px;
+    cursor:pointer;
+    font-weight:700;
+}
+
 .place-order-notes h3{
     margin-bottom: 8px;
 }
@@ -105,6 +125,14 @@
   .place-order-left input {
     padding: 9px;
     font-size: 0.95rem;
+  }
+
+  .place-order-promo{
+    flex-direction: column;
+  }
+
+  .place-order-promo button{
+    min-height: 42px;
   }
 
   .place-order .cart-total h2 {

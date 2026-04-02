@@ -1,14 +1,11 @@
 .navbar{
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: 8px 4%;
 }
 .navbar .logo{
   width: max(10%,200px);
-}
-.navbar .profile{
-  width:40px;
 }
 
 @media (max-width: 750px) {
@@ -20,9 +17,6 @@
     width: 140px;
   }
 
-  .navbar .profile {
-    width: 34px;
-  }
 }
 
 @media (max-width: 420px) {
@@ -34,7 +28,4 @@
     width: 120px;
   }
 
-  .navbar .profile {
-    width: 30px;
-  }
 }

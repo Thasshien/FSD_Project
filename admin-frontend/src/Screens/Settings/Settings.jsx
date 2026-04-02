@@ -7,7 +7,6 @@ const Settings = ({ url }) => {
     restaurantName: "Food Prep",
     opensAtHour: 10,
     closesAtHour: 22,
-    lowStockThreshold: 3,
   });
 
   const fetchSettings = async () => {
@@ -75,17 +74,6 @@ const Settings = ({ url }) => {
                 min="1"
                 max="24"
                 name="closesAtHour"
-              />
-            </div>
-            <div className="flex-col">
-              <p>Low stock threshold</p>
-              <input
-                value={settings.lowStockThreshold}
-                onChange={onChangeHandler}
-                type="number"
-                min="1"
-                max="20"
-                name="lowStockThreshold"
               />
             </div>
           </div>

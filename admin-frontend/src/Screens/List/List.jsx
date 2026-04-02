@@ -34,7 +34,6 @@ const List = ({ url }) => {
       await axios.post(`${url}/api/food/update-meta`, {
         id: item._id,
         available: updates.available ?? item.available,
-        stock: updates.stock ?? item.stock,
         prepTimeMinutes: updates.prepTimeMinutes ?? item.prepTimeMinutes,
         gstRate: updates.gstRate ?? item.gstRate,
       });
@@ -62,9 +61,6 @@ const List = ({ url }) => {
             <b>Price</b>
           </p>
           <p>
-            <b>Stock</b>
-          </p>
-          <p>
             <b>Prep (mins)</b>
           </p>
           <p>
@@ -81,21 +77,6 @@ const List = ({ url }) => {
               <p>{item.name}</p>
               <p>{item.category}</p>
               <p>Rs {item.price}</p>
-              <input
-                type="number"
-                min="0"
-                value={item.stock ?? 0}
-                onChange={(event) =>
-                  setList((currentList) =>
-                    currentList.map((currentItem) =>
-                      currentItem._id === item._id
-                        ? { ...currentItem, stock: Number(event.target.value) }
-                        : currentItem
-                    )
-                  )
-                }
-                onBlur={() => updateFoodMeta(item, { stock: item.stock })}
-              />
               <input
                 type="number"
                 min="5"

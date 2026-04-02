@@ -248,7 +248,7 @@ const buildOrderQuote = async ({ items = [], address = {}, foodLookup = new Map(
     let subtotal = 0
     let gstAmount = 0
     let totalQuantity = 0
-    let maxPrepTimeMinutes = 20
+    let maxPrepTimeMinutes = 0
 
     if (!items.length) {
         errors.push("Your cart is empty.")
@@ -382,14 +382,15 @@ const buildOrderQuote = async ({ items = [], address = {}, foodLookup = new Map(
         warnings.push("Peak-hour handling surcharge applied due to high demand.")
     }
 
+    const effectivePrepTimeMinutes = normalizedItems.length ? maxPrepTimeMinutes : 0
     const estimatedTravelMinutes = deliveryZone.available
         ? Math.max(10, Math.ceil(Number(deliveryZone.distanceKm || 0) * 5))
         : 0
     const estimatedDeliveryMinutes = Math.max(
-        maxPrepTimeMinutes,
-        maxPrepTimeMinutes + estimatedTravelMinutes
+        effectivePrepTimeMinutes,
+        effectivePrepTimeMinutes + estimatedTravelMinutes
     )
-    const estimatedReadyAt = new Date(now.getTime() + maxPrepTimeMinutes * 60 * 1000)
+    const estimatedReadyAt = new Date(now.getTime() + effectivePrepTimeMinutes * 60 * 1000)
     const estimatedDeliveryAt = new Date(now.getTime() + estimatedDeliveryMinutes * 60 * 1000)
     const total = Number((subtotal + gstAmount + deliveryFee + peakSurcharge - discountAmount).toFixed(2))
 
@@ -415,7 +416,7 @@ const buildOrderQuote = async ({ items = [], address = {}, foodLookup = new Map(
             maxTotalItems: RESTAURANT_RULES.maxTotalItems,
             cancelWindowMinutes: RESTAURANT_RULES.cancelWindowMinutes,
             maxDeliveryDistanceKm: RESTAURANT_RULES.maxDeliveryDistanceKm,
-            estimatedPrepMinutes: maxPrepTimeMinutes,
+            estimatedPrepMinutes: effectivePrepTimeMinutes,
             estimatedTravelMinutes,
             estimatedDeliveryMinutes,
             estimatedReadyAt,

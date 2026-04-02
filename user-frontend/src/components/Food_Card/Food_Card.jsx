@@ -18,10 +18,9 @@ const Food_Card = ({
   isPreviouslyOrdered,
   onOpen,
 }) => {
-  const { cartItems, addToCart, removeFromCart, getFoodImageSrc, restaurantSettings } = useContext(Store_Context);
+  const { cartItems, addToCart, removeFromCart, getFoodImageSrc } = useContext(Store_Context);
   const imageSrc = getFoodImageSrc({ image, localImage });
   const canOrder = available !== false && Number(stock ?? 0) > 0;
-  const isLowStock = Number(stock ?? 0) > 0 && Number(stock ?? 0) <= Number(restaurantSettings.lowStockThreshold ?? 3);
 
   const safeDietaryInfo = dietaryInfo || {};
   const visibleHighlights = Array.from(
@@ -56,7 +55,6 @@ const Food_Card = ({
         {!canOrder ? (
           <span className="Food_Item_badge Food_Item_badge_warning">Unavailable</span>
         ) : null}
-        {isLowStock ? <span className="Food_Item_badge Food_Item_badge_stock">Only {stock} left</span> : null}
         {isPreviouslyOrdered ? <span className="Food_Item_badge">Ordered before</span> : null}
         {!cartItems[id] ? (
           <img
